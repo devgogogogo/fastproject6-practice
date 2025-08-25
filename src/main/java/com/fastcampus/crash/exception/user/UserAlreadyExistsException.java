@@ -3,13 +3,13 @@ package com.fastcampus.crash.exception.user;
 import com.fastcampus.crash.exception.ClientErrorException;
 import org.springframework.http.HttpStatus;
 
-public class UserNotFoundException extends ClientErrorException {
+public class UserAlreadyExistsException extends ClientErrorException {
 
-    public UserNotFoundException() {
-        super(HttpStatus.NOT_FOUND,"유저를 찾을 수 없습니다.");
+    public UserAlreadyExistsException() {
+        super(HttpStatus.CONFLICT,"유저가 이미 존재합니다.");
     }
 
-    public UserNotFoundException(String username) {
+    public UserAlreadyExistsException(String username) {
         super(HttpStatus.NOT_FOUND, "User with username " + username + " not found");
     }
 

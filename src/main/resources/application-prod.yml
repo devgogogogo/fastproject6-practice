@@ -16,4 +16,4 @@ spring:
     password: crash-postgres-password
 
 jwt:
-  secret-key: Y3Jhc2gtc2VydmljZS1zdXBlci1zZXZyZXQta2V5
+  secret-key: Y3Jhc2gtc2VydmljZS1zdXBlci1zZXZyZXQta2V5203874yosdhgf
