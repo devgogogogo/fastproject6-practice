@@ -68,13 +68,11 @@ public class UserEntity implements UserDetails {
                     new SimpleGrantedAuthority("ROLE_" + Role.ADMIN.name()),
                     new SimpleGrantedAuthority(Role.ADMIN.name()),
                     new SimpleGrantedAuthority("ROLE_" + Role.USER.name()), //이건 안넣어도 된다
-                    new SimpleGrantedAuthority(Role.USER.name())//이건 안넣어도 된다
-            );
+                    new SimpleGrantedAuthority(Role.USER.name()));//이건 안넣어도 된다
         } else {
             return List.of(
                     new SimpleGrantedAuthority("ROLE_" + Role.USER.name()),//이렇게 해야 .hasRole(Role.ADMIN.name())도 검증에 통과가 된다.
-                    new SimpleGrantedAuthority(Role.USER.name()) //.hasAuthority(Role.ADMIN.name()) (O) , .hasRole(Role.ADMIN.name())(X))
-            );
+                    new SimpleGrantedAuthority(Role.USER.name())); //.hasAuthority(Role.ADMIN.name()) (O) , .hasRole(Role.ADMIN.name())(X))
         }
     }
 

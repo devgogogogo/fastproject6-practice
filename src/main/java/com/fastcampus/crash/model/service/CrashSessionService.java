@@ -7,6 +7,7 @@ import com.fastcampus.crash.model.crashsession.CrashSessionPostRequestBody;
 import com.fastcampus.crash.model.entity.CrashSessionEntity;
 import com.fastcampus.crash.model.entity.SessionSpeakerEntity;
 import com.fastcampus.crash.model.repository.CrashSessionEntityRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -27,20 +28,21 @@ public class CrashSessionService {
     }
 
     //전체조회
+
     public List<CrashSession> getCrashSessions() {
         List<CrashSession> list = crashSessionEntityRepository.findAll().stream().map(CrashSession::from).toList();
         return list;
     }
 
     //단건 조회
+
     public CrashSession getCrashSessionBySessionId(Long sessionId) {
         CrashSessionEntity crashSessionEntity = getCrashSessionEntityBySessionId(sessionId);
         return CrashSession.from(crashSessionEntity);
     }
 
     public CrashSession createCrashSession(CrashSessionPostRequestBody crashSessionPostRequestBody) {
-        Long speakerId = crashSessionPostRequestBody.speakerId();
-        SessionSpeakerEntity sessionSpeakerEntity = sessionSpeakerService.getSessionSpeakerEntityBySpeakerId(speakerId); //sessionSpeakerService를 활용해서 sessionSpeakerEntity를 불러온다.
+        SessionSpeakerEntity sessionSpeakerEntity = sessionSpeakerService.getSessionSpeakerEntityBySpeakerId(crashSessionPostRequestBody.speakerId()); //sessionSpeakerService를 활용해서 sessionSpeakerEntity를 불러온다.
 
         CrashSessionEntity crashSessionEntity = CrashSessionEntity.of( //요청한crashSessionPostRequestBody를 crashSessionEntity 객체에 넣어준다.
                 crashSessionPostRequestBody.title(),
@@ -84,8 +86,4 @@ public class CrashSessionService {
         CrashSessionEntity crashSessionEntity = getCrashSessionEntityBySessionId(sessionId);
         crashSessionEntityRepository.delete(crashSessionEntity);
     }
-
-
-
-
 }

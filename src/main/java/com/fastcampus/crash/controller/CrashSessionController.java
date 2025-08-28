@@ -3,6 +3,7 @@ package com.fastcampus.crash.controller;
 import com.fastcampus.crash.model.crashsession.CrashSession;
 import com.fastcampus.crash.model.crashsession.CrashSessionPatchRequestBody;
 import com.fastcampus.crash.model.crashsession.CrashSessionPostRequestBody;
+import com.fastcampus.crash.model.entity.UserEntity;
 import com.fastcampus.crash.model.service.CrashSessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,10 +38,8 @@ public class CrashSessionController {
     }
 
     @PatchMapping("/{sessionId}")
-    public ResponseEntity<CrashSession> updateCrashSession(
-            @PathVariable Long sessionId,
-            @RequestBody CrashSessionPatchRequestBody crashSessionPatchRequestBody) {
-        CrashSession crashSession = crashSessionService.updateCrashSession(sessionId,crashSessionPatchRequestBody);
+    public ResponseEntity<CrashSession> updateCrashSession(@PathVariable Long sessionId, @RequestBody CrashSessionPatchRequestBody crashSessionPatchRequestBody) {
+        CrashSession crashSession = crashSessionService.updateCrashSession(sessionId, crashSessionPatchRequestBody);
         return ResponseEntity.ok(crashSession);
     }
 

@@ -1,6 +1,9 @@
 package com.fastcampus.crash.config;
 
 
+import com.fastcampus.crash.model.crashsession.CrashSessionCategory;
+import com.fastcampus.crash.model.crashsession.CrashSessionPostRequestBody;
+import com.fastcampus.crash.model.service.CrashSessionService;
 import com.fastcampus.crash.model.service.SessionSpeakerService;
 import com.fastcampus.crash.model.service.UserService;
 import com.fastcampus.crash.model.sessionspeaker.SessionSpeaker;
@@ -13,16 +16,19 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.ZonedDateTime;
+import java.util.Random;
 import java.util.stream.IntStream;
 
 @Configuration
 @RequiredArgsConstructor
 public class ApplicationConfiguration {
 
-   private static final Faker faker = new Faker();
+    private static final Faker faker = new Faker();
 
-   private final UserService userService;
-   private final SessionSpeakerService sessionSpeakerService;
+    private final UserService userService;
+    private final SessionSpeakerService sessionSpeakerService;
+    private final CrashSessionService crashSessionService;
 
     @Bean
     public ApplicationRunner applicationRunner() {
@@ -47,7 +53,14 @@ public class ApplicationConfiguration {
     }
 
     private void createTestSessionSpeakers(int numberOfSpeakers) {
-        IntStream.range(0, numberOfSpeakers).mapToObj(i -> createTestSessionSpeaker()).toList();
+        var sessionSpeakers =
+                IntStream.range(0, numberOfSpeakers).mapToObj(i -> createTestSessionSpeaker()).toList();
+
+        sessionSpeakers.forEach(
+                sessionSpeaker -> {
+                    int numberOfSessions = new Random().nextInt(4) + 1;
+                    IntStream.range(0, numberOfSessions).forEach(i -> createTestCrashSession(sessionSpeaker));
+                });
     }
 
     private SessionSpeaker createTestSessionSpeaker() {
@@ -55,5 +68,29 @@ public class ApplicationConfiguration {
         String company = faker.company().name();
         String description = faker.shakespeare().romeoAndJulietQuote();
         return sessionSpeakerService.createdSessionSpeaker(new SessionSpeakerPostRequestBody(company, name, description));
+    }
+
+    private void createTestCrashSession(SessionSpeaker sessionSpeaker) {
+        String title = faker.book().title();
+
+
+        String body = faker.shakespeare().asYouLikeItQuote()
+                + faker.shakespeare().hamletQuote()
+                + faker.shakespeare().kingRichardIIIQuote()
+                + faker.shakespeare().romeoAndJulietQuote();
+
+        crashSessionService.createCrashSession(
+                new CrashSessionPostRequestBody(
+                        title,
+                        body,
+                        getRandomCategory(),
+                        ZonedDateTime.now().plusDays(new Random().nextInt(2) + 1),
+                        sessionSpeaker.speakerId()));
+    }
+    private CrashSessionCategory getRandomCategory() {
+
+        CrashSessionCategory[] categories = CrashSessionCategory.values();
+        int randomIndex = new Random().nextInt(categories.length);
+        return categories[randomIndex];
     }
 }
