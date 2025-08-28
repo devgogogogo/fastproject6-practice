@@ -2,7 +2,6 @@ package com.fastcampus.crash.config;
 
 import com.fastcampus.crash.model.user.Role;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,11 +19,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@RequiredArgsConstructor
 public class WebConfiguration {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-    @Autowired private JwtExceptionFilter jwtExceptionFilter;
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtExceptionFilter jwtExceptionFilter;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -40,17 +40,15 @@ public class WebConfiguration {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
-                .authorizeHttpRequests(
-                        (requests) ->
-                                requests
-                                        .requestMatchers(HttpMethod.POST, "/api/*/users", "/api/*/users/authenticate")
-                                        .permitAll()
-                                        .requestMatchers(HttpMethod.GET, "/api/*/session-speakers", "/api/*/session-speakers/**", "/api/*/crash-sessions", "/api/*/crash-sessions/**")
-                                        .permitAll()
-                                        .requestMatchers("/api/*/session-speakers", "/api/*/session-speakers/**", "/api/*/crash-sessions", "/api/*/crash-sessions/**")
-                                        .hasAuthority(Role.ADMIN.name())
-                                        .anyRequest()
-                                        .authenticated())
+                .authorizeHttpRequests((requests) -> requests
+                        .requestMatchers(HttpMethod.POST, "/api/*/users", "/api/*/users/authenticate")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/*/session-speakers", "/api/*/session-speakers/**", "/api/*/crash-sessions", "/api/*/crash-sessions/**")
+                        .permitAll()
+                        .requestMatchers("/api/*/session-speakers", "/api/*/session-speakers/**", "/api/*/crash-sessions", "/api/*/crash-sessions/**")
+                        .hasAuthority(Role.ADMIN.name())
+                        .anyRequest()
+                        .authenticated())
                 .sessionManagement(
                         (session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(CsrfConfigurer::disable)
