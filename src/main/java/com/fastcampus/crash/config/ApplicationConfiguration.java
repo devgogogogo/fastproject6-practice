@@ -1,8 +1,10 @@
 package com.fastcampus.crash.config;
 
 
+import com.fastcampus.crash.model.coinbase.PriceResponse;
 import com.fastcampus.crash.model.crashsession.CrashSessionCategory;
 import com.fastcampus.crash.model.crashsession.CrashSessionPostRequestBody;
+import com.fastcampus.crash.model.exchange.ExchangeResponse;
 import com.fastcampus.crash.model.service.CrashSessionService;
 import com.fastcampus.crash.model.service.SessionSpeakerService;
 import com.fastcampus.crash.model.service.UserService;
@@ -16,9 +18,14 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.RestClient;
 
+import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
 
@@ -46,20 +53,53 @@ public class ApplicationConfiguration {
 //                createTestSessionSpeakers(10);
 
                 //TODO : Bitcoin USD 가격 조회
-                getBitcoinUsdPrice();
+                Double bitcoinUsdPrice = getBitcoinUsdPrice();
+
+                //TODO: Usd to KRW 환율 조회
+                Double usdToKrwExchangeRate = getUsdToKrwExchangeRate();
 
                 //TODO:  Bitcoin KRW 가격 계산
+                double koreanPremium = 1.1;
+                double bitcoinKrwPrice = bitcoinUsdPrice * usdToKrwExchangeRate * koreanPremium;
+                log.info(String.format("BTC KRW: %.2f",bitcoinKrwPrice));
             }
         };
     }
 
-    private void getBitcoinUsdPrice() {
-        String response = restClient
+    private Double getBitcoinUsdPrice() {
+        PriceResponse response = restClient
                 .get()
                 .uri("https://api.coinbase.com/v2/prices/BTC-USD/buy")
                 .retrieve()
-                .body(String.class);
-        log.info(response);
+                .onStatus(HttpStatusCode::is4xxClientError,(requ,resp)->{
+                    //TODO: 클라이언트 에러 예외 처리를 커스텀하게 하면 좋다. 근데 강의니깐 간단하게 로깅으로만 남긴다.
+                    log.error(new String(resp.getBody().readAllBytes(), StandardCharsets.UTF_8));
+                })
+                .body(PriceResponse.class);
+        assert response != null;
+        log.info(response.toString());
+
+        return Double.parseDouble(response.data().amount());
+    }
+
+    //    https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey=3sMvoIaYqWE17iCw8v0fy2IxB7LemZaK&searchdate=20180102&data=AP01
+    private Double getUsdToKrwExchangeRate() {
+        ExchangeResponse[] response = restClient
+                .get()
+                .uri("https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey=3sMvoIaYqWE17iCw8v0fy2IxB7LemZaK&searchdate=20180102&data=AP01")
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, (requ, resp) -> {
+                    //TODO: 클라이언트 에러 예외 처리를 커스텀하게 하면 좋다. 근데 강의니깐 간단하게 로깅으로만 남긴다.
+                    log.error(new String(resp.getBody().readAllBytes(), StandardCharsets.UTF_8));
+                })
+                .body(ExchangeResponse[].class);
+        assert response != null;
+        log.info(response.toString());
+        ExchangeResponse usdToKrwExchangeRate = Arrays.stream(response)
+                .filter(exchangeResponse -> exchangeResponse.cur_unit().equals("USD"))
+                .findFirst()
+                .orElseThrow();
+        return Double.parseDouble(usdToKrwExchangeRate.deal_bas_r().replace(",", ""));
     }
 
     private void createTestUsers() {
@@ -70,14 +110,15 @@ public class ApplicationConfiguration {
     }
 
     private void createTestSessionSpeakers(int numberOfSpeakers) {
-        var sessionSpeakers =
-                IntStream.range(0, numberOfSpeakers).mapToObj(i -> createTestSessionSpeaker()).toList();
+
+        List<SessionSpeaker> sessionSpeakers = IntStream.range(0, numberOfSpeakers).mapToObj(i -> createTestSessionSpeaker()).toList();
 
         sessionSpeakers.forEach(
                 sessionSpeaker -> {
                     int numberOfSessions = new Random().nextInt(4) + 1;
                     IntStream.range(0, numberOfSessions).forEach(i -> createTestCrashSession(sessionSpeaker));
                 });
+
     }
 
     private SessionSpeaker createTestSessionSpeaker() {
