@@ -23,19 +23,17 @@ public class CrashSessionService {
 
 
     //중복 메서드를 따로 뺴줘서 만들어줬음
-    private CrashSessionEntity getCrashSessionEntityBySessionId(Long sessionId) {
+    public CrashSessionEntity getCrashSessionEntityBySessionId(Long sessionId) {
         return crashSessionEntityRepository.findById(sessionId).orElseThrow(() -> new CrashSessionNotFoundException(sessionId));
     }
 
     //전체조회
-
     public List<CrashSession> getCrashSessions() {
         List<CrashSession> list = crashSessionEntityRepository.findAll().stream().map(CrashSession::from).toList();
         return list;
     }
 
     //단건 조회
-
     public CrashSession getCrashSessionBySessionId(Long sessionId) {
         CrashSessionEntity crashSessionEntity = getCrashSessionEntityBySessionId(sessionId);
         return CrashSession.from(crashSessionEntity);

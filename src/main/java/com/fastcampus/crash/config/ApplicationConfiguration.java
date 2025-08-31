@@ -10,11 +10,13 @@ import com.fastcampus.crash.model.sessionspeaker.SessionSpeaker;
 import com.fastcampus.crash.model.sessionspeaker.SessionSpeakerPostRequestBody;
 import com.fastcampus.crash.model.user.UserSignUpRequestBody;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
 
 import java.time.ZonedDateTime;
 import java.util.Random;
@@ -22,8 +24,10 @@ import java.util.stream.IntStream;
 
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 public class ApplicationConfiguration {
 
+    private static final RestClient restClient = RestClient.create();
     private static final Faker faker = new Faker();
 
     private final UserService userService;
@@ -33,16 +37,29 @@ public class ApplicationConfiguration {
     @Bean
     public ApplicationRunner applicationRunner() {
 
-
         //어플리케이션을 구동시키고 나서 동작시키고 싶은 다양한 로직들을 작성하기만 하면 밑에 있는 오직들이 실행됨
         return new ApplicationRunner() {
             @Override
             public void run(ApplicationArguments args) throws Exception {
                 //TODO: 유저 및 세션 스피커 생성
-                createTestUsers();
-                createTestSessionSpeakers(10);
+//                createTestUsers();
+//                createTestSessionSpeakers(10);
+
+                //TODO : Bitcoin USD 가격 조회
+                getBitcoinUsdPrice();
+
+                //TODO:  Bitcoin KRW 가격 계산
             }
         };
+    }
+
+    private void getBitcoinUsdPrice() {
+        String response = restClient
+                .get()
+                .uri("https://api.coinbase.com/v2/prices/BTC-USD/buy")
+                .retrieve()
+                .body(String.class);
+        log.info(response);
     }
 
     private void createTestUsers() {

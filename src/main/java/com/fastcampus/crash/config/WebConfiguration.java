@@ -12,6 +12,8 @@ import org.springframework.security.config.annotation.web.configurers.HttpBasicC
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,7 +44,7 @@ public class WebConfiguration {
         http.cors(Customizer.withDefaults())
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers(HttpMethod.POST, "/api/*/users", "/api/*/users/authenticate")
-                        .permitAll()
+                        .permitAll()//로그인을 하지 않더라도 허용을 해줬기 때문에 볼수있다.
                         .requestMatchers(HttpMethod.GET, "/api/*/session-speakers", "/api/*/session-speakers/**", "/api/*/crash-sessions", "/api/*/crash-sessions/**")
                         .permitAll()
                         .requestMatchers("/api/*/session-speakers", "/api/*/session-speakers/**", "/api/*/crash-sessions", "/api/*/crash-sessions/**")

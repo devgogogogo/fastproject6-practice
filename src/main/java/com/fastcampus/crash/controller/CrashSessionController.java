@@ -3,11 +3,14 @@ package com.fastcampus.crash.controller;
 import com.fastcampus.crash.model.crashsession.CrashSession;
 import com.fastcampus.crash.model.crashsession.CrashSessionPatchRequestBody;
 import com.fastcampus.crash.model.crashsession.CrashSessionPostRequestBody;
+import com.fastcampus.crash.model.crashsession.CrashSessionRegistrationStatus;
 import com.fastcampus.crash.model.entity.UserEntity;
 import com.fastcampus.crash.model.service.CrashSessionService;
+import com.fastcampus.crash.model.service.RegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +21,7 @@ import java.util.List;
 public class CrashSessionController {
 
     private final CrashSessionService crashSessionService;
+    private final RegistrationService registrationService;
 
     @GetMapping()
     public ResponseEntity<List<CrashSession>> getCrashSessions() {
@@ -29,6 +33,13 @@ public class CrashSessionController {
     public ResponseEntity<CrashSession> getCrashSessionBySessionId(@PathVariable Long sessionId) {
         CrashSession crashSession = crashSessionService.getCrashSessionBySessionId(sessionId);
         return ResponseEntity.ok(crashSession);
+    }
+
+    @GetMapping("/{sessionId}/registration-status")
+    public ResponseEntity<CrashSessionRegistrationStatus> getCrashSessionRegistrationStatusBySessionIdAndCurrentUser(@PathVariable Long sessionId, Authentication authentication) {
+
+        CrashSessionRegistrationStatus crashSessionRegistrationStatus = registrationService.getCrashSessionRegistrationstatusBySessionId(sessionId, (UserEntity) authentication.getPrincipal());
+        return ResponseEntity.ok(crashSessionRegistrationStatus);
     }
 
     @PostMapping
