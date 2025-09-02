@@ -7,6 +7,7 @@ import com.fastcampus.crash.model.crashsession.CrashSessionPostRequestBody;
 import com.fastcampus.crash.model.exchange.ExchangeResponse;
 import com.fastcampus.crash.model.service.CrashSessionService;
 import com.fastcampus.crash.model.service.SessionSpeakerService;
+import com.fastcampus.crash.model.service.SlackService;
 import com.fastcampus.crash.model.service.UserService;
 import com.fastcampus.crash.model.sessionspeaker.SessionSpeaker;
 import com.fastcampus.crash.model.sessionspeaker.SessionSpeakerPostRequestBody;
@@ -41,6 +42,8 @@ public class ApplicationConfiguration {
     private final SessionSpeakerService sessionSpeakerService;
     private final CrashSessionService crashSessionService;
 
+    private final SlackService slackService;
+
     @Bean
     public ApplicationRunner applicationRunner() {
 
@@ -48,20 +51,21 @@ public class ApplicationConfiguration {
         return new ApplicationRunner() {
             @Override
             public void run(ApplicationArguments args) throws Exception {
+
                 //TODO: 유저 및 세션 스피커 생성
-//                createTestUsers();
-//                createTestSessionSpeakers(10);
-
-                //TODO : Bitcoin USD 가격 조회
-                Double bitcoinUsdPrice = getBitcoinUsdPrice();
-
-                //TODO: Usd to KRW 환율 조회
-                Double usdToKrwExchangeRate = getUsdToKrwExchangeRate();
-
-                //TODO:  Bitcoin KRW 가격 계산
-                double koreanPremium = 1.1;
-                double bitcoinKrwPrice = bitcoinUsdPrice * usdToKrwExchangeRate * koreanPremium;
-                log.info(String.format("BTC KRW: %.2f",bitcoinKrwPrice));
+                createTestUsers();
+                createTestSessionSpeakers(10);
+//
+//                //TODO : Bitcoin USD 가격 조회
+//                Double bitcoinUsdPrice = getBitcoinUsdPrice();
+//
+//                //TODO: Usd to KRW 환율 조회
+//                Double usdToKrwExchangeRate = getUsdToKrwExchangeRate();
+//
+//                //TODO:  Bitcoin KRW 가격 계산
+//                double koreanPremium = 1.1;
+//                double bitcoinKrwPrice = bitcoinUsdPrice * usdToKrwExchangeRate * koreanPremium;
+//                log.info(String.format("BTC KRW: %.2f",bitcoinKrwPrice));
             }
         };
     }
@@ -71,7 +75,7 @@ public class ApplicationConfiguration {
                 .get()
                 .uri("https://api.coinbase.com/v2/prices/BTC-USD/buy")
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError,(requ,resp)->{
+                .onStatus(HttpStatusCode::is4xxClientError, (requ, resp) -> {
                     //TODO: 클라이언트 에러 예외 처리를 커스텀하게 하면 좋다. 근데 강의니깐 간단하게 로깅으로만 남긴다.
                     log.error(new String(resp.getBody().readAllBytes(), StandardCharsets.UTF_8));
                 })
@@ -86,7 +90,7 @@ public class ApplicationConfiguration {
     private Double getUsdToKrwExchangeRate() {
         ExchangeResponse[] response = restClient
                 .get()
-                .uri("https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey=3sMvoIaYqWE17iCw8v0fy2IxB7LemZaK&searchdate=20180102&data=AP01")
+                .uri("https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey=여기에는 인증키를 넣어야함&searchdate=20180102&data=AP01")
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, (requ, resp) -> {
                     //TODO: 클라이언트 에러 예외 처리를 커스텀하게 하면 좋다. 근데 강의니깐 간단하게 로깅으로만 남긴다.
@@ -145,6 +149,7 @@ public class ApplicationConfiguration {
                         ZonedDateTime.now().plusDays(new Random().nextInt(2) + 1),
                         sessionSpeaker.speakerId()));
     }
+
     private CrashSessionCategory getRandomCategory() {
 
         CrashSessionCategory[] categories = CrashSessionCategory.values();

@@ -9,6 +9,7 @@ import com.fastcampus.crash.model.entity.UserEntity;
 import com.fastcampus.crash.model.registration.Registration;
 import com.fastcampus.crash.model.registration.RegistrationPostRequestBody;
 import com.fastcampus.crash.model.repository.RegistrationEntityRepository;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ public class RegistrationService {
 
     private final RegistrationEntityRepository registrationEntityRepository;
     private final CrashSessionService crashSessionService;
+    private final SlackService slackService;
 
     //반복적인 메서드를 따로 빼서 만듬
     public RegistrationEntity getRegistrationEntityByRegistrationIdAndUserEntity(Long registrationId, UserEntity userEntity) {
@@ -38,13 +40,18 @@ public class RegistrationService {
         return Registration.from(registrationEntity);
     }
 
+
     public Registration createRegistrationByCurrentUser(@Valid RegistrationPostRequestBody registrationPostRequestBody, UserEntity currentUser) {
         CrashSessionEntity crashSessionEntity = crashSessionService.getCrashSessionEntityBySessionId(registrationPostRequestBody.sessionId());
         registrationEntityRepository.findByUserAndSession(currentUser, crashSessionEntity) //등록 중족있는지 체크한다. 있다면 예외처리함
                 .ifPresent(registrationEntity -> {throw new RegistrationAlreadyExistsException(registrationEntity.getRegistrationId(), currentUser);});
+
         RegistrationEntity registrationEntity = RegistrationEntity.of(currentUser, crashSessionEntity);
         RegistrationEntity saved = registrationEntityRepository.save(registrationEntity);
-        return Registration.from(saved);
+        Registration registration = Registration.from(saved);
+        //저장이 되면 슬랙서비스를 작동시키는 순서로 간다.
+        slackService.sendSlackNotification(registration);
+        return registration;
     }
 
     public void deleteRegistrationByRegistrationIdAndByCurrentUser(Long registrationId, UserEntity principal) {

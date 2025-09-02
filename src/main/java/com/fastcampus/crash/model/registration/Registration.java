@@ -5,7 +5,7 @@ import com.fastcampus.crash.model.entity.RegistrationEntity;
 import com.fastcampus.crash.model.user.User;
 
 public record Registration(
-        Long registration,
+        Long registrationId,
         User user,
         CrashSession session
 ) {
