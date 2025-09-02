@@ -6,6 +6,7 @@ import com.fastcampus.crash.model.crashsession.CrashSessionPatchRequestBody;
 import com.fastcampus.crash.model.crashsession.CrashSessionPostRequestBody;
 import com.fastcampus.crash.model.entity.CrashSessionEntity;
 import com.fastcampus.crash.model.entity.SessionSpeakerEntity;
+import com.fastcampus.crash.model.repository.CrashSessionCacheRepository;
 import com.fastcampus.crash.model.repository.CrashSessionEntityRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +22,7 @@ public class CrashSessionService {
 
     private final CrashSessionEntityRepository crashSessionEntityRepository;
     private final SessionSpeakerService sessionSpeakerService;
+    private final CrashSessionCacheRepository crashSessionCacheRepository;
 
 
     //중복 메서드를 따로 뺴줘서 만들어줬음
@@ -29,14 +32,27 @@ public class CrashSessionService {
 
     //전체조회
     public List<CrashSession> getCrashSessions() {
-        List<CrashSession> list = crashSessionEntityRepository.findAll().stream().map(CrashSession::from).toList();
-        return list;
+        List<CrashSession> crashSessions = crashSessionCacheRepository.getCrashSessionsListCache();
+
+        if (!ObjectUtils.isEmpty(crashSessions)) {
+            return crashSessions;
+        } else {
+            List<CrashSession> list = crashSessionEntityRepository.findAll().stream().map(CrashSession::from).toList();
+            crashSessionCacheRepository.setCrashSessionsListCache(list);
+            return list;
+        }
     }
 
     //단건 조회
     public CrashSession getCrashSessionBySessionId(Long sessionId) {
-        CrashSessionEntity crashSessionEntity = getCrashSessionEntityBySessionId(sessionId);
-        return CrashSession.from(crashSessionEntity);
+        Optional<CrashSession> crashSessionCache = crashSessionCacheRepository.getCrashSessionCache(sessionId); //redis에서 찾아보고
+
+       return crashSessionCache.orElseGet(() -> { //없으면 데이터베이스에서 가지고 온다.
+            CrashSessionEntity crashSessionEntity = getCrashSessionEntityBySessionId(sessionId);
+           CrashSession crashSession = CrashSession.from(crashSessionEntity);
+           crashSessionCacheRepository.setCrashSessionCache(crashSession);
+           return crashSession;
+        });
     }
 
     public CrashSession createCrashSession(CrashSessionPostRequestBody crashSessionPostRequestBody) {

@@ -1,6 +1,7 @@
 package com.fastcampus.crash.model.entity;
 
 import com.fastcampus.crash.model.user.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -62,6 +63,7 @@ public class UserEntity implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this.role.equals(Role.ADMIN)) {
             return List.of(
@@ -86,22 +88,51 @@ public class UserEntity implements UserDetails {
         return username;
     }
 
+
+    /*
+    로그인을 하면 redis에
+    {
+  "userId": 1,
+  "username": "jayce",
+  "password": "$2a$10$XTgwZs.SzRLutG6jAcGNi.bTVjD1NBWFRvXWyhMpgMlJOVoWBLpMu",
+  "name": "Dev Jayce",
+  "email": "jayce@crash.com",
+  "role": "USER",
+  "createdDateTime": 1756793518.712332,
+  "enabled": true,
+  "authorities": [
+    {
+      "authority": "ROLE_USER"
+    },
+    {
+      "authority": "USER"
+    }
+  ],
+  "accountNonLocked": true,
+  "credentialsNonExpired": true,
+  "accountNonExpired": true
+} 이런식으로 데이터 세팅이 되어서 나오는데 우리가 사용하는 값도 아니고 레디스상에 데이터로 저장되길 원치 않기 떄문에 -->> @JsonIgnore 를 붙여주면 안나온다.
+     */
     @Override
+    @JsonIgnore
     public boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonLocked() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isEnabled() {
         return true;
     }

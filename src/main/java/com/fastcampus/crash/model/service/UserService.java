@@ -3,6 +3,7 @@ package com.fastcampus.crash.model.service;
 import com.fastcampus.crash.exception.user.UserAlreadyExistsException;
 import com.fastcampus.crash.exception.user.UserNotFoundException;
 import com.fastcampus.crash.model.entity.UserEntity;
+import com.fastcampus.crash.model.repository.UserEntityCacheRepository;
 import com.fastcampus.crash.model.repository.UserEntityRepository;
 import com.fastcampus.crash.model.user.User;
 import com.fastcampus.crash.model.user.UserAuthenticationResponse;
@@ -26,6 +27,7 @@ public class UserService implements UserDetailsService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final UserEntityCacheRepository userEntityCacheRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -62,7 +64,18 @@ public class UserService implements UserDetailsService {
 
     //유저네임을 전달받아서 유저 엔티티를 검색해주고 이때 해당유저 네임을 가진 유저 엔티티가 없으면 userNotFoundException을 날려주는 메소드를 만들어준다.(반복적으로 사용할것이기 때문에)
     private UserEntity getUserEntityByUsername(String username) {
-        return userEntityRepository
-                .findByUsername(username).orElseThrow(() -> new UserNotFoundException(username));
+        Optional<UserEntity> userEntityCache = userEntityCacheRepository.getUserEntityCache(username);
+
+        if (userEntityCache.isPresent()) {
+            UserEntity userEntity = userEntityCache.get();
+            return userEntity;
+        } else {
+            UserEntity userEntity = userEntityRepository
+                    .findByUsername(username).orElseThrow(() -> new UserNotFoundException(username));
+
+            userEntityCacheRepository.setUserEntityCache(userEntity);
+
+            return userEntity;
+        }
     }
 }
