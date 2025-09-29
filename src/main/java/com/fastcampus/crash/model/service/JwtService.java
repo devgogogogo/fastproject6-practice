@@ -32,7 +32,7 @@ public class JwtService {
 
     private String generateToken(String subject) {
         Date now = new Date();
-        Date exp = new Date(now.getTime() + (1000 * 60 * 60 * 3)); // 1초 * 60초 *60분 * 3 ==> 3시간
+        Date exp = new Date(now.getTime() + (1000 * 60 * 60 * 3)); // 1초 * 60(초) *60(분) * 3 ==> 3시간
 
         String token = Jwts.builder()
                 .subject(subject)

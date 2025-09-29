@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,7 +37,11 @@ public class CrashSessionController {
     }
 
     @GetMapping("/{sessionId}/registration-status")
-    public ResponseEntity<CrashSessionRegistrationStatus> getCrashSessionRegistrationStatusBySessionIdAndCurrentUser(@PathVariable Long sessionId, Authentication authentication) {
+    public ResponseEntity<CrashSessionRegistrationStatus> getCrashSessionRegistrationStatusBySessionIdAndCurrentUser(
+            @PathVariable Long sessionId,
+//            @AuthenticationPrincipal UserEntity userEntity
+            Authentication authentication // -->@AuthenticationPrincipal UserEntity userEntity 같은 표현입 이렇게 사용해도된다.
+    ) {
 
         CrashSessionRegistrationStatus crashSessionRegistrationStatus = registrationService.getCrashSessionRegistrationstatusBySessionId(sessionId, (UserEntity) authentication.getPrincipal());
         return ResponseEntity.ok(crashSessionRegistrationStatus);
